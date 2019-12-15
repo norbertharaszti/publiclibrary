@@ -1,16 +1,21 @@
 import java.util.Date;
 
 public class Book {
+    public static String idColName = "ID";
+    public static String isbnColName = "isbn";
+    public static String titleColName = "title";
+    public static String releaseYearColName = "release_year";
+    public static String bookTableName = "book";
     private int id;
     private String isbn;
     private String title;
-    private Date releaseDate;
+    private int releaseYear;
 
-    public Book(int id, String isbn, String title, Date releaseDate) {
+    public Book(int id, String isbn, String title, int releaseDate) {
         this.id = id;
         this.isbn = isbn;
         this.title = title;
-        this.releaseDate = releaseDate;
+        this.releaseYear = releaseDate;
     }
 
     public int getId() {
@@ -37,11 +42,11 @@ public class Book {
         this.title = title;
     }
 
-    public Date getReleaseDate() {
-        return releaseDate;
+    public int getReleaseYear() {
+        return releaseYear;
     }
 
-    public void setReleaseDate(Date releaseDate) {
-        this.releaseDate = releaseDate;
+    public void setReleaseYear(int releaseYear) {
+        this.releaseYear = releaseYear;
     }
 }
