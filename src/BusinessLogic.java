@@ -1,3 +1,4 @@
+import java.sql.Date;
 import java.sql.*;
 import java.time.DateTimeException;
 import java.time.LocalDate;
@@ -61,19 +62,32 @@ public class BusinessLogic {
                 if (possibleAuthors.size() > 0) {
                     int size = possibleAuthors.size();
                     StringBuilder builder = new StringBuilder();
-                    builder.append("Please type the author ID from the given list below. If the author is not in the list, please type " + size + ".");
+                    builder.append("Please type the author ID from the given list below. If the author is not in the list, please type ").append(size).append(".");
                     for (int i = 0; i < size; i++) {
                         Author author1 = possibleAuthors.get(i);
                         builder.append("\n" + i + ".: ID: " + author1.getAuthorId() +
                                 " name: " + author1.getName() +
                                 " date of birth: " + author1.getDateOfBirth());
                     }
+                    message = builder.toString();
                     int userChoice = getNumberFromUser(0, size, message);
+                    int authorID;
                     if (userChoice != size) {
-                        addConnectionIntoAuthorOfBooksTable(connection, isbn, possibleAuthors.get(userChoice).getAuthorId());
+                        authorID = possibleAuthors.get(userChoice).getAuthorId();
+                        addConnectionIntoAuthorOfBooksTable(connection, isbn, authorID);
                     } else {
                         message = "Please add the birth date of the author in the format of YYYY-MM-DD";
                         String birhtDate = getInputFromAdmin(message, Author.dateOfBirthColName);
+                        addAuthor(connection, authorName, birhtDate);
+
+                        String getID = "SELECT " + Author.authorIdColName + " FROM " + Author.authorTableName +
+                                " WHERE " + Author.dateOfBirthColName + "= ? AND " + Author.nameColName + "= ?";
+                        PreparedStatement ps = connection.prepareStatement(getID);
+                        ps.setDate(1, birhtDate);
+                        ps.setString(2, authorName);
+                        ResultSet resultSet = ps.executeQuery();
+                        resultSet.next();
+                        resultSet.getInt(Author.authorIdColName);
                     }
                 }
             }
@@ -105,6 +119,15 @@ public class BusinessLogic {
             authors.add(author);
         }
         return authors;
+    }
+
+    protected void addAuthor(Connection connection, String name, Date dateOfBirth) throws SQLException {
+        PreparedStatement psInsert = connection.prepareStatement(SQL_INSERT_INTO_AUTHOR);
+        psInsert.setInt(1, 0);
+        psInsert.setString(2, name);
+        psInsert.setDate(3, dateOfBirth);
+        psInsert.addBatch();
+        psInsert.executeBatch();
     }
 
     private String getInputFromAdmin(String message, String colName) {
@@ -176,7 +199,9 @@ public class BusinessLogic {
                 return true;
             }
 
-        } else if (colName.equals(Author.dateOfBirthColName)) {
+        } else if (colName.equals(Author.dateOfBirthColName) ||
+                colName.equals(User.birthdayColName) ||
+                colName.equals(User.dateOfRegistrationColName)) {
             regExString1 = "^\\d{4}-\\d{2}-\\d{2}$";
             pattern = Pattern.compile(regExString1);
             matcher = pattern.matcher(input);
@@ -185,7 +210,6 @@ public class BusinessLogic {
                 int month = Integer.parseInt(input.substring(5, 7));
                 int day = Integer.parseInt(input.substring(8, 10));
                 try {
-
                     LocalDate date = LocalDate.of(year, month, day);
                     if (date.isAfter(LocalDate.now())) {
                         return false;
