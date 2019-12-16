@@ -2,7 +2,6 @@ import java.sql.Date;
 import java.sql.*;
 import java.time.DateTimeException;
 import java.time.LocalDate;
-import java.time.Year;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -182,7 +181,9 @@ public class BusinessLogic {
                 return true;
             }
         } else if (colName.equals(Book.titleColName)
-                || colName.equals(Author.nameColName)) {
+                || colName.equals(Author.nameColName)
+        || colName.equals(User.firstNameColName)
+        || colName.equals(User.secondNameColName)) {
             regExString1 = "^.{2,45}$";
             pattern = Pattern.compile(regExString1);
             matcher = pattern.matcher(input);
@@ -225,6 +226,7 @@ public class BusinessLogic {
         }
         return false;
     }
+
     protected void registerUser() {
         try {
             Connection connection = getConnection();
@@ -236,11 +238,11 @@ public class BusinessLogic {
             String secondName = getInputFromAdmin(message, User.secondNameColName);
             message = "Please add the birthdate using the format YYYY-MM-DD:";
             String birth = getInputFromAdmin(message, User.birthdayColName);
-            Date birthDate=dateFormatter(birth);
+            Date birthDate = dateFormatter(birth);
 
-                    message = "Please add the register date using the format YYYY-MM-DD:";
+            message = "Please add the register date using the format YYYY-MM-DD:";
             String register = getInputFromAdmin(message, User.dateOfRegistrationColName);
-            Date registerDate=dateFormatter(register);
+            Date registerDate = dateFormatter(register);
 
             PreparedStatement psInsert = connection.prepareStatement(SQL_INSERT_INTO_USER);
 //            psInsert.setString(1, Book.bookTableName);
@@ -263,13 +265,20 @@ public class BusinessLogic {
         }
 
     }
-    private Date dateFormatter(String dateToFormat){
+
+    private Date dateFormatter(String dateToFormat) {
         int year = Integer.parseInt(dateToFormat.substring(0, 4));
         int month = Integer.parseInt(dateToFormat.substring(5, 7));
         int day = Integer.parseInt(dateToFormat.substring(8, 10));
-        LocalDate localDate= LocalDate.of(year,month,day);
-        long dateMill=localDate.toEpochDay();
-        Date date=new Date(dateMill);
+        Date date = Date.valueOf(LocalDate.of(year, month, day));
         return date;
+    }
+
+    public static void main(String[] args) {
+        int year = 1999;
+        int month = 11;
+        int day = 31;
+        Date date = Date.valueOf(LocalDate.of(year, month, day));
+        System.out.println(date);
     }
 }
