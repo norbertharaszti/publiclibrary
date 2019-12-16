@@ -1,6 +1,7 @@
 import java.sql.Date;
 
 public class Author {
+    public static final String authorTableName = "author";
     public static final String authorIdColName = "ID";
     public static final String nameColName = "name";
     public static final String dateOfBirthColName = "date_of_birth";
@@ -20,5 +21,9 @@ public class Author {
 
     public String getName() {
         return name;
+    }
+
+    public Date getDateOfBirth() {
+        return dateOfBirth;
     }
 }
