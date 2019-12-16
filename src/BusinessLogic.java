@@ -1,4 +1,5 @@
 import java.sql.*;
+import java.time.DateTimeException;
 import java.time.LocalDate;
 import java.util.*;
 import java.util.regex.Matcher;
@@ -72,6 +73,7 @@ public class BusinessLogic {
                         addConnectionIntoAuthorOfBooksTable(connection, isbn, possibleAuthors.get(userChoice).getAuthorId());
                     } else {
                         message = "Please add the birth date of the author in the format of YYYY-MM-DD";
+                        String birhtDate = getInputFromAdmin(message, Author.dateOfBirthColName);
                     }
                 }
             }
@@ -182,8 +184,14 @@ public class BusinessLogic {
                 int year = Integer.parseInt(input.substring(0, 4));
                 int month = Integer.parseInt(input.substring(5, 7));
                 int day = Integer.parseInt(input.substring(8, 10));
-                LocalDate date = LocalDate.of(year, month, day);
-                if (year > LocalDate.now().getYear() || date.isAfter(LocalDate.now())) {
+                try {
+
+                    LocalDate date = LocalDate.of(year, month, day);
+                    if (date.isAfter(LocalDate.now())) {
+                        return false;
+                    }
+                } catch (DateTimeException e) {
+                    System.out.println("Please add a valid date");
                     return false;
                 }
                 return true;
@@ -191,6 +199,7 @@ public class BusinessLogic {
         }
         return false;
     }
+
     protected void registerUser() {
         try {
             Connection connection = getConnection();
