@@ -2,6 +2,7 @@ import java.sql.Date;
 import java.sql.*;
 import java.time.DateTimeException;
 import java.time.LocalDate;
+import java.time.Year;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -78,12 +79,13 @@ public class BusinessLogic {
                     } else {
                         message = "Please add the birth date of the author in the format of YYYY-MM-DD";
                         String birhtDate = getInputFromAdmin(message, Author.dateOfBirthColName);
-                        addAuthor(connection, authorName, birhtDate);
+                        Date dateOfBirth = dateFormatter(birhtDate);
+                        addAuthor(connection, authorName, dateOfBirth);
 
                         String getID = "SELECT " + Author.authorIdColName + " FROM " + Author.authorTableName +
                                 " WHERE " + Author.dateOfBirthColName + "= ? AND " + Author.nameColName + "= ?";
                         PreparedStatement ps = connection.prepareStatement(getID);
-                        ps.setDate(1, birhtDate);
+                        ps.setDate(1, dateOfBirth);
                         ps.setString(2, authorName);
                         ResultSet resultSet = ps.executeQuery();
                         resultSet.next();
@@ -223,7 +225,6 @@ public class BusinessLogic {
         }
         return false;
     }
-
     protected void registerUser() {
         try {
             Connection connection = getConnection();
@@ -234,10 +235,13 @@ public class BusinessLogic {
             message = "Please add the second name of the user:";
             String secondName = getInputFromAdmin(message, User.secondNameColName);
             message = "Please add the birthdate using the format YYYY-MM-DD:";
-            String birthDate = getInputFromAdmin(message, User.birthdayColName);
+            String birth = getInputFromAdmin(message, User.birthdayColName);
+            Date birthDate=dateFormatter(birth);
 
-            message = "Please add the register date using the format YYYY-MM-DD:";
-            String registerDate = getInputFromAdmin(message, User.dateOfRegistrationColName);
+                    message = "Please add the register date using the format YYYY-MM-DD:";
+            String register = getInputFromAdmin(message, User.dateOfRegistrationColName);
+            Date registerDate=dateFormatter(register);
+
             PreparedStatement psInsert = connection.prepareStatement(SQL_INSERT_INTO_USER);
 //            psInsert.setString(1, Book.bookTableName);
 //            psInsert.setString(2, Book.idColName);
@@ -258,5 +262,14 @@ public class BusinessLogic {
             e.printStackTrace();
         }
 
+    }
+    private Date dateFormatter(String dateToFormat){
+        int year = Integer.parseInt(dateToFormat.substring(0, 4));
+        int month = Integer.parseInt(dateToFormat.substring(5, 7));
+        int day = Integer.parseInt(dateToFormat.substring(8, 10));
+        LocalDate localDate= LocalDate.of(year,month,day);
+        long dateMill=localDate.toEpochDay();
+        Date date=new Date(dateMill);
+        return date;
     }
 }
