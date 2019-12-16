@@ -15,11 +15,15 @@ public class BusinessLogic {
     private static final String SQL_INSERT_INTO_BOOK = "INSERT INTO " + Book.bookTableName + " (" + Book.idColName + ", "
             + Book.isbnColName + ", " + Book.titleColName + ", " + Book.releaseYearColName + ") VALUES (?,?,?,?)";
 
+
     private static final String SQL_INSERT_INTO_AUTHOR = "INSERT INTO " + Author.authorTableName + " (" + Author.authorIdColName + ", "
             + Author.nameColName + ", " + Author.dateOfBirthColName + ") VALUES (?,?,?)";
 
     private static final String SQL_INSERT_INTO_AUTHOR_OF_BOOK = "INSERT INTO " + AuthorOfBooks.AUTHOR_OF_BOOKS_TABLE_NAME + " ("
             + AuthorOfBooks.isbnColName + ", " + AuthorOfBooks.authorIdColName + ") VALUES (?,?)";
+
+    private static final String SQL_INSERT_INTO_USER = "INSERT INTO " + User.userTableName + " (" + User.idColName + ", "
+            + User.firstNameColName + ", " + User.secondNameColName + ", " + User.birthdayColName + ", " + User.dateOfRegistrationColName + ") VALUES (?,?,?,?,?)";
 
     protected void addBook() {
         try {
@@ -186,5 +190,40 @@ public class BusinessLogic {
             }
         }
         return false;
+    }
+    protected void registerUser() {
+        try {
+            Connection connection = getConnection();
+
+            String message = "Please add the first name of the user:";
+            String firstName = getInputFromAdmin(message, User.firstNameColName);
+
+            message = "Please add the second name of the user:";
+            String secondName = getInputFromAdmin(message, User.secondNameColName);
+            message = "Please add the birthdate using the format YYYY-MM-DD:";
+            String birthDate = getInputFromAdmin(message, User.birthdayColName);
+
+            message = "Please add the register date using the format YYYY-MM-DD:";
+            String registerDate = getInputFromAdmin(message, User.dateOfRegistrationColName);
+            PreparedStatement psInsert = connection.prepareStatement(SQL_INSERT_INTO_USER);
+//            psInsert.setString(1, Book.bookTableName);
+//            psInsert.setString(2, Book.idColName);
+//            psInsert.setString(3, Book.isbnColName);
+//            psInsert.setString(4, Book.titleColName);
+//            psInsert.setString(5, Book.releaseYearColName);
+            psInsert.setInt(1, 0);
+            psInsert.setString(2, firstName);
+            psInsert.setString(3, secondName);
+            psInsert.setDate(4, birthDate);
+            psInsert.setDate(5, registerDate);
+            psInsert.addBatch();
+            psInsert.executeBatch();
+
+            connection.close();
+            System.out.println("Data insert was successful");
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
     }
 }
