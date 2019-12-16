@@ -1,7 +1,10 @@
 import java.sql.*;
-import java.time.DateTimeException;
 import java.time.LocalDate;
-import java.util.*;
+import java.time.Year;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Properties;
+import java.util.Scanner;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -16,13 +19,6 @@ public class BusinessLogic {
     private static final String SQL_INSERT_INTO_BOOK = "INSERT INTO " + Book.bookTableName + " (" + Book.idColName + ", "
             + Book.isbnColName + ", " + Book.titleColName + ", " + Book.releaseYearColName + ") VALUES (?,?,?,?)";
 
-
-    private static final String SQL_INSERT_INTO_AUTHOR = "INSERT INTO " + Author.authorTableName + " (" + Author.authorIdColName + ", "
-            + Author.nameColName + ", " + Author.dateOfBirthColName + ") VALUES (?,?,?)";
-
-    private static final String SQL_INSERT_INTO_AUTHOR_OF_BOOK = "INSERT INTO " + AuthorOfBooks.AUTHOR_OF_BOOKS_TABLE_NAME + " ("
-            + AuthorOfBooks.isbnColName + ", " + AuthorOfBooks.authorIdColName + ") VALUES (?,?)";
-
     private static final String SQL_INSERT_INTO_USER = "INSERT INTO " + User.userTableName + " (" + User.idColName + ", "
             + User.firstNameColName + ", " + User.secondNameColName + ", " + User.birthdayColName + ", " + User.dateOfRegistrationColName + ") VALUES (?,?,?,?,?)";
 
@@ -30,6 +26,7 @@ public class BusinessLogic {
         try {
             Connection connection = getConnection();
 
+            List<Author> authors = getAuthors(connection);
 
             String message = "Please add the 10 or 13 digit long ISBN number of the book:";
             String isbn = getInputFromAdmin(message, Book.isbnColName);
@@ -39,7 +36,13 @@ public class BusinessLogic {
             message = "Please add the release date using the format YYYY";
             int releaseYear = Integer.parseInt(getInputFromAdmin(message, Book.releaseYearColName));
 
+            message = "Please add the 1st author of the book: ";
             PreparedStatement psInsert = connection.prepareStatement(SQL_INSERT_INTO_BOOK);
+//            psInsert.setString(1, Book.bookTableName);
+//            psInsert.setString(2, Book.idColName);
+//            psInsert.setString(3, Book.isbnColName);
+//            psInsert.setString(4, Book.titleColName);
+//            psInsert.setString(5, Book.releaseYearColName);
             psInsert.setInt(1, 0);
             psInsert.setString(2, isbn);
             psInsert.setString(3, title);
@@ -48,49 +51,12 @@ public class BusinessLogic {
             psInsert.executeBatch();
 
 // Ha benne van az author listában, akkor nem kell új authort felvenni, amúgy igen...
-            message = "Please add the 1st author of the book: ";
-            List<Author> authors = getAuthors(connection);
-            if (authors.size() > 0) {
-                String authorName = getInputFromAdmin(message, Author.nameColName);
-                List<Author> possibleAuthors = new ArrayList<>();
-                for (int i = 0; i < authors.size(); i++) {
-                    if (authors.get(i).getName().contains(authorName)) {
-                        possibleAuthors.add(authors.get(i));
-                    }
-                }
-                if (possibleAuthors.size() > 0) {
-                    int size = possibleAuthors.size();
-                    StringBuilder builder = new StringBuilder();
-                    builder.append("Please type the author ID from the given list below. If the author is not in the list, please type " + size + ".");
-                    for (int i = 0; i < size; i++) {
-                        Author author1 = possibleAuthors.get(i);
-                        builder.append("\n" + i + ".: ID: " + author1.getAuthorId() +
-                                " name: " + author1.getName() +
-                                " date of birth: " + author1.getDateOfBirth());
-                    }
-                    int userChoice = getNumberFromUser(0, size, message);
-                    if (userChoice != size) {
-                        addConnectionIntoAuthorOfBooksTable(connection, isbn, possibleAuthors.get(userChoice).getAuthorId());
-                    } else {
-                        message = "Please add the birth date of the author in the format of YYYY-MM-DD";
-                        String birhtDate = getInputFromAdmin(message, Author.dateOfBirthColName);
-                    }
-                }
-            }
+//            String author = getInputFromAdmin(message, Author.nameColName);
             connection.close();
             System.out.println("Data insert was successful");
         } catch (SQLException e) {
             e.printStackTrace();
         }
-
-    }
-
-    private void addConnectionIntoAuthorOfBooksTable(Connection connection, String isbn, int authorID) throws SQLException {
-        PreparedStatement psInsert = connection.prepareStatement(SQL_INSERT_INTO_AUTHOR_OF_BOOK);
-        psInsert.setString(1, isbn);
-        psInsert.setInt(2, authorID);
-        psInsert.addBatch();
-        psInsert.executeBatch();
 
     }
 
@@ -118,24 +84,6 @@ public class BusinessLogic {
             isInputOk = validateInput(input, colName);
         } while (!isInputOk);
         return input;
-    }
-
-    private static int getNumberFromUser(int min, int max, String message) {
-        Scanner scanner = null;
-        boolean isInputOk;
-        int number = -1;
-        do {
-            System.out.println(message);
-            isInputOk = false;
-            try {
-                scanner = new Scanner(System.in);
-                number = scanner.nextInt();
-                isInputOk = number >= min && number <= max;
-            } catch (InputMismatchException e) {
-                scanner.nextLine();
-            }
-        } while (!isInputOk);
-        return number;
     }
 
     private boolean validateInput(String input, String colName) {
@@ -175,31 +123,11 @@ public class BusinessLogic {
                 }
                 return true;
             }
-
-        } else if (colName.equals(Author.dateOfBirthColName)) {
-            regExString1 = "^\\d{4}-\\d{2}-\\d{2}$";
-            pattern = Pattern.compile(regExString1);
-            matcher = pattern.matcher(input);
-            if (matcher.find()) {
-                int year = Integer.parseInt(input.substring(0, 4));
-                int month = Integer.parseInt(input.substring(5, 7));
-                int day = Integer.parseInt(input.substring(8, 10));
-                try {
-
-                    LocalDate date = LocalDate.of(year, month, day);
-                    if (date.isAfter(LocalDate.now())) {
-                        return false;
-                    }
-                } catch (DateTimeException e) {
-                    System.out.println("Please add a valid date");
-                    return false;
-                }
-                return true;
-            }
+//            int month = Integer.parseInt(input.substring(5, 7));
+//            int day = Integer.parseInt(input.substring(8, 10));
         }
         return false;
     }
-
     protected void registerUser() {
         try {
             Connection connection = getConnection();
@@ -210,10 +138,13 @@ public class BusinessLogic {
             message = "Please add the second name of the user:";
             String secondName = getInputFromAdmin(message, User.secondNameColName);
             message = "Please add the birthdate using the format YYYY-MM-DD:";
-            String birthDate = getInputFromAdmin(message, User.birthdayColName);
+            String birth = getInputFromAdmin(message, User.birthdayColName);
+            Date birthDate=dateFormatter(birth);
 
-            message = "Please add the register date using the format YYYY-MM-DD:";
-            String registerDate = getInputFromAdmin(message, User.dateOfRegistrationColName);
+                    message = "Please add the register date using the format YYYY-MM-DD:";
+            String register = getInputFromAdmin(message, User.dateOfRegistrationColName);
+            Date registerDate=dateFormatter(register);
+
             PreparedStatement psInsert = connection.prepareStatement(SQL_INSERT_INTO_USER);
 //            psInsert.setString(1, Book.bookTableName);
 //            psInsert.setString(2, Book.idColName);
@@ -234,5 +165,14 @@ public class BusinessLogic {
             e.printStackTrace();
         }
 
+    }
+    private Date dateFormatter(String dateToFormat){
+        int year = Integer.parseInt(dateToFormat.substring(0, 4));
+        int month = Integer.parseInt(dateToFormat.substring(5, 7));
+        int day = Integer.parseInt(dateToFormat.substring(8, 10));
+        LocalDate localDate= LocalDate.of(year,month,day);
+        long dateMill=localDate.toEpochDay();
+        Date date=new Date(dateMill);
+        return date;
     }
 }
