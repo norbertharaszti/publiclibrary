@@ -1,11 +1,11 @@
 import java.util.Date;
 
 public class Book {
-    public static String idColName = "ID";
-    public static String isbnColName = "isbn";
-    public static String titleColName = "title";
-    public static String releaseYearColName = "release_year";
-    public static String bookTableName = "book";
+    public static final String idColName = "ID";
+    public static final String isbnColName = "isbn";
+    public static final String titleColName = "title";
+    public static final String releaseYearColName = "release_year";
+    public static final String bookTableName = "book";
     private int id;
     private String isbn;
     private String title;
